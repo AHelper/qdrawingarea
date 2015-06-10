@@ -1,0 +1,9 @@
+QDrawingArea collects relative position input, translate to an internal coordinate system, and generates rasterizable drawing information.
+
+QTouchEvent --
+              \
+QMouseEvent ----- QDrawingArea -- InputProcessor -- Rasterizer
+              /                       \            /
+QTabletEvent -                         -- Stroke -[]- Vertex
+
+Stroke holds information on all vertices from start to end of the stroke. The InputProcessor stage collects vertex data and builds a basic stroke.  The Rasterizer stage computes Stroke and Vertex data for drawing, such as

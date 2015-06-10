@@ -1,0 +1,7 @@
+The QDrawingArea widget library provides a drawing-oriented widget for Qt 5 
+applications.  This widget provides interactions between mouse, touch, and 
+tablet inputs and is highly configurable.
+
+This widget is available under a permissive MIT/X11 license.
+
+Project page: sf.net/p/qdrawingarea
