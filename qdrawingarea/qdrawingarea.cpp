@@ -643,3 +643,40 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
         p.drawLine(stroke[i], stroke[i+1]);
     }
 }
+
+
+QAbstractDrawingModelPrivate::QAbstractDrawingModelPrivate(QAbstractDrawingModel *q) : q_ptr(q)
+{
+
+}
+
+QAbstractDrawingModelPrivate::~QAbstractDrawingModelPrivate()
+{
+
+}
+
+
+QAbstractDrawingModel::QAbstractDrawingModel()
+{
+
+}
+
+QAbstractDrawingModel::~QAbstractDrawingModel()
+{
+
+}
+
+bool QAbstractDrawingModel::hasIndex(quint32 strokeId)
+{
+
+}
+
+const QDrawingStroke &QAbstractDrawingModel::index(quint32 strokeId)
+{
+
+}
+
+void QAbstractDrawingModel::append(const QDrawingStroke &stroke)
+{
+
+}

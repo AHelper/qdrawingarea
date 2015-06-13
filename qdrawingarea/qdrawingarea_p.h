@@ -14,6 +14,7 @@ class QDrawingStroke;
 class QDrawingPen;
 class QDrawingArea;
 struct QDrawingAreaPrivate;
+class QAbstractDrawingModel;
 
 class InputProcessor : public QObject
 {
@@ -93,4 +94,16 @@ struct QDrawingAreaPrivate
     QPixmap pixmap;
     QMap<TouchInfoPair, quint32> touchPointMap;
 };
+
+struct QAbstractDrawingModelPrivate
+{
+    QAbstractDrawingModelPrivate(QAbstractDrawingModel *q);
+    ~QAbstractDrawingModelPrivate();
+
+    QAbstractDrawingModel *q_ptr;
+
+    QMap<quint32, QDrawingStroke> strokeMap;
+    quint32 currentId;
+};
+
 #endif // QDRAWINGAREA_P

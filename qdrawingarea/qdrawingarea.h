@@ -3,8 +3,10 @@
 
 #include <QVector2D>
 #include <QWidget>
+#include <QAbstractListModel>
 
 class QDrawingAreaPrivate;
+class QAbstractDrawingModelPrivate;
 
 class QDrawingPen
 {
@@ -101,12 +103,25 @@ protected:
     int m_dirtyAt;
 };
 
-class QAbstractDrawingModel
+class QAbstractDrawingModel : public QObject
 {
+    Q_OBJECT
 public:
     QAbstractDrawingModel();
     ~QAbstractDrawingModel();
 
+    bool hasIndex(quint32 strokeId);
+    const QDrawingStroke& index(quint32 strokeId);
+    void append(const QDrawingStroke& stroke);
+
+signals:
+    void strokeInserted(const QDrawingStroke& stroke);
+    void strokeRemoved(const QDrawingStroke& stroke);
+
+private:
+    QAbstractDrawingModelPrivate *d_ptr;
+    Q_DECLARE_PRIVATE(QAbstractDrawingModel)
+    Q_DISABLE_COPY(QAbstractDrawingModel)
 };
 
 class QDrawingArea : public QWidget
