@@ -113,6 +113,16 @@ public:
     QAbstractDrawingModel();
     ~QAbstractDrawingModel();
 
+    /**
+     * @brief Sets the size of the drawing document in millimeters.
+     *
+     * The drawing document is an internal area that scales to the size of the QDrawingArea widget.
+     * This document uses sizes in mm (millimeters) to provide DPI- and scaling-independent drawing.
+     *
+     *
+     * @param size
+     */
+    void setDrawingSize(QSizeF &size);
     bool hasIndex(quint32 strokeId);
     const QDrawingStroke& index(quint32 strokeId);
     void append(const QDrawingStroke& stroke);
@@ -141,8 +151,9 @@ public:
         IgnoreMouse      = 0x00000002,
         IgnoreTablet     = 0x00000004,
         SmoothCurves     = 0x00000008,
-        D_EmulateTablet  = 0x00000010,
-        D_EmulateTouch   = 0x00000020
+        D_EmulateTablet  = 0x01000000,
+        D_EmulateTouch   = 0x02000000,
+        D_EmulatePressure= 0x04000000,
     };
 
     void setFlag(int flag, bool enable = true);

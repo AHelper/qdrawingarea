@@ -9,7 +9,7 @@ TestUI::TestUI(QWidget *parent) :
     ui->setupUi(this);
 
     ui->widget->addPen(pen);
-    ui->widget->setFlag(QDrawingArea::SmoothCurves);
+    ui->widget->setFlag(QDrawingArea::SmoothCurves | QDrawingArea::D_EmulatePressure);
     ui->widget->setUpdateRate(20);
 }
 

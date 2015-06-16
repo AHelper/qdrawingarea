@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QTime>
 
 QDrawingArea::QDrawingArea(QWidget *parent) : QWidget(parent),
     d_ptr(new QDrawingAreaPrivate(this))
@@ -202,6 +203,12 @@ void QDrawingArea::addStrokePoint(quint32 deviceId, QSharedPointer<QDrawingPen> 
     Q_D(QDrawingArea);
 
     qDebug() << thread();
+
+    if(d->flags & D_EmulatePressure)
+    {
+        pressure = (QTime::currentTime().second() % 2 ? QTime::currentTime().msec() : 1000 - QTime::currentTime().msec()) / 1000.0;
+    }
+
     QMetaObject::invokeMethod(d->processor, "processPoint",
                               Qt::QueuedConnection,
                               Q_ARG(quint32, deviceId),
@@ -522,7 +529,7 @@ void QDrawingAreaPrivate::generateRandomId()
 //    m_maxWidth(width),
 //    m_orientationLock(orientationLock)
 //{
-
+//
 //}
 
 QDrawingPen::QDrawingPen(Qt::MouseButton button, QColor color, qreal minWidth, qreal maxWidth, qreal orientationLock) :
@@ -638,9 +645,18 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
     pen.setCapStyle(Qt::RoundCap);
 
     if(d->flags & QDrawingArea::SmoothCurves)
-        p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::HighQualityAntialiasing);
 
     // TODO: Cubic curves
+
+
+    if(stroke.size() == point + 1)
+    {
+        // Dot arrived
+        pen.setWidthF(stroke.pen()->calcWidth(stroke[point].pressure()));
+        p.setPen(pen);
+        p.drawPoint(stroke[point]);
+    }
 
     for(int i = point; i < stroke.size() - 1; i++)
     {

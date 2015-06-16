@@ -103,6 +103,8 @@ struct QAbstractDrawingModelPrivate
     QAbstractDrawingModel *q_ptr;
 
     QMap<quint32, QDrawingStroke> strokeMap;
+    QSizeF documentSize;
+
     quint32 currentId;
 };
 
