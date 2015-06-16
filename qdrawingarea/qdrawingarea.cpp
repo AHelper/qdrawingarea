@@ -515,20 +515,22 @@ void QDrawingAreaPrivate::generateRandomId()
     }
 }
 
-QDrawingPen::QDrawingPen(Qt::MouseButton button, QColor color, qreal width) :
-    m_button(button),
-    m_color(color),
-    m_minWidth(width),
-    m_maxWidth(width)
-{
+//QDrawingPen::QDrawingPen(Qt::MouseButton button, QColor color, qreal width, qreal orientationLock) :
+//    m_button(button),
+//    m_color(color),
+//    m_minWidth(width),
+//    m_maxWidth(width),
+//    m_orientationLock(orientationLock)
+//{
 
-}
+//}
 
-QDrawingPen::QDrawingPen(Qt::MouseButton button, QColor color, qreal minWidth, qreal maxWidth) :
+QDrawingPen::QDrawingPen(Qt::MouseButton button, QColor color, qreal minWidth, qreal maxWidth, qreal orientationLock) :
     m_button(button),
     m_color(color),
     m_minWidth(minWidth),
-    m_maxWidth(maxWidth)
+    m_maxWidth(maxWidth == 0 ? minWidth : maxWidth),
+    m_orientationLock(orientationLock)
 {
 
 }
@@ -566,6 +568,11 @@ bool QDrawingPen::isVariableWidth()
 {
     // No fuzzy comparison needed
     return m_minWidth != m_maxWidth;
+}
+
+bool QDrawingPen::isOrientationLocked()
+{
+    return m_orientationLock == qQNaN();
 }
 
 

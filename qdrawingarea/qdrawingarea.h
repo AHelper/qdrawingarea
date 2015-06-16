@@ -11,10 +11,10 @@ class QAbstractDrawingModelPrivate;
 class QDrawingPen
 {
 public:
-    QDrawingPen(Qt::MouseButton button, QColor color, qreal width);
-    QDrawingPen(Qt::MouseButton button, QColor color, qreal minWidth, qreal maxWidth);
+//    explicit QDrawingPen(Qt::MouseButton button, QColor color, qreal width, qreal orientationLock = qQNaN());
+    explicit QDrawingPen(Qt::MouseButton button, QColor color, qreal minWidth, qreal maxWidth = 0, qreal orientationLock = qQNaN());
 
-    QDrawingPen(QDrawingPen & other);
+    explicit QDrawingPen(QDrawingPen & other);
 
     enum {
         Mode_FeltTipPen,
@@ -29,6 +29,8 @@ public:
     qreal minWidth();
     qreal maxWidth();
     bool isVariableWidth();
+    bool isOrientationLocked();
+    qreal orientationLock();
 
     inline qreal calcWidth(qreal pressure)
     {
@@ -43,6 +45,7 @@ private:
     QColor m_color;
     qreal m_minWidth;
     qreal m_maxWidth;
+    qreal m_orientationLock;
 };
 
 class QDrawingPoint

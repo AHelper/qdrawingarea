@@ -4,7 +4,7 @@
 TestUI::TestUI(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TestUI),
-    pen(Qt::LeftButton, QColor(Qt::blue), 1, 5)
+    pen(Qt::LeftButton, QColor(Qt::blue), (qreal)1, (qreal)5)
 {
     ui->setupUi(this);
 
