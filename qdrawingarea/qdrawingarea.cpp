@@ -206,7 +206,8 @@ void QDrawingArea::addStrokePoint(quint32 deviceId, QSharedPointer<QDrawingPen> 
 
     if(d->flags & D_EmulatePressure)
     {
-        pressure = (QTime::currentTime().second() % 2 ? QTime::currentTime().msec() : 1000 - QTime::currentTime().msec()) / 1000.0;
+        //pressure = (QTime::currentTime().second() % 2 ? QTime::currentTime().msec() : 1000 - QTime::currentTime().msec()) / 1000.0;
+        pressure = QTime::currentTime().second() % 2;
     }
 
     QMetaObject::invokeMethod(d->processor, "processPoint",
@@ -658,12 +659,59 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
         p.drawPoint(stroke[point]);
     }
 
-    for(int i = point; i < stroke.size() - 1; i++)
+    // Draw filled area if the thickness is over a threshhold or if a fixed angle pen is used
+    if(stroke.size() - point > 1)
+    {
+        QBrush brush(stroke.pen()->color());
+        pen.setWidthF(1);
+        p.setPen(pen);
+        p.setBrush(brush);
+        const QPointF points[] = {
+            {100,100},
+            {130,100},
+            {130,120},
+            {120,110},
+            {100,125}
+        };
+
+        // # of points is calculatable
+//        QPointF *list = new QPointF[2 * (stroke.size() - point)];
+
+        for(int i = point; i < stroke.size() - 1; i++)
+        {
+            QLineF line(stroke[i], stroke[i+1]);
+
+            QPointF fixedList[6];
+//            QPointF normal = line.normalVector().unitVector().p2() - line.normalVector().p1();
+//            fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*normal;
+//            fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*normal;
+//            fixedList[2] = line.p2() - stroke.pen()->calcWidth(stroke[i+1].pressure())*normal;
+//            fixedList[3] = line.p1() - stroke.pen()->calcWidth(stroke[i].pressure())*normal;
+//            if(i != 0)
+//            {
+//                line = QLineF(stroke[i-1], stroke[i]);
+//                normal = line.normalVector().unitVector().p2() - line.normalVector().p1();
+//                fixedList[4] = line
+//            }
+            fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*stroke[i].normal().toPointF();
+            fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
+            fixedList[2] = line.p2() - stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
+            fixedList[3] = line.p1() - stroke.pen()->calcWidth(stroke[i].pressure())*stroke[i].normal().toPointF();
+
+            p.drawPolygon(fixedList, 4);
+//            list[i-point + (stroke.size() - point)] =
+        }
+
+//        p.drawPolygon(points, 5);
+    }
+    else for(int i = point; i < stroke.size() - 1; i++)
     {
         // TODO: Variable-width lines
+        /*
         pen.setWidthF(stroke.pen()->calcWidth(stroke[i+1].pressure()));
         p.setPen(pen);
         p.drawLine(stroke[i], stroke[i+1]);
+        */
     }
 }
 
