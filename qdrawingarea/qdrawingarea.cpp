@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QTime>
+#include <QtMath>
 
 QDrawingArea::QDrawingArea(QWidget *parent) : QWidget(parent),
     d_ptr(new QDrawingAreaPrivate(this))
@@ -206,8 +207,8 @@ void QDrawingArea::addStrokePoint(quint32 deviceId, QSharedPointer<QDrawingPen> 
 
     if(d->flags & D_EmulatePressure)
     {
-        //pressure = (QTime::currentTime().second() % 2 ? QTime::currentTime().msec() : 1000 - QTime::currentTime().msec()) / 1000.0;
-        pressure = QTime::currentTime().second() % 2;
+        pressure = (QTime::currentTime().second() % 2 ? QTime::currentTime().msec() : 1000 - QTime::currentTime().msec()) / 1000.0;
+//        pressure = QTime::currentTime().second() % 2;
     }
 
     QMetaObject::invokeMethod(d->processor, "processPoint",
@@ -286,11 +287,12 @@ void InputProcessor::processPoint(quint32 deviceId, QSharedPointer<QDrawingPen> 
         QDrawingPoint &previous = stroke[stroke.size() - 1];
 //        QLineF vector(previous, point);
 //        QLineF normal = vector.normalVector().unitVector();
-
+        QTransform trans;
         QVector2D t = (QVector2D)point - (QVector2D)previous;
 
         t.normalize();
-        point.setNormal(t);
+        trans.rotate(90);
+        point.setNormal(QVector2D(trans.map(t.toPointF())));
     }
 
     // TODO: Generate cubic curves from recent points
@@ -442,6 +444,8 @@ QDrawingStroke &QDrawingStroke::operator<<(const QDrawingPoint &p)
 {
     m_newPoints.append(m_points.size());
     m_points.append(p);
+
+    m_dirty = true;
 
     return *this;
 }
@@ -611,6 +615,7 @@ void Rasterizer::repaint(QList<int> modifiedStrokes)
     }
     else
     {
+        qDebug() << "Full repaint";
         pix = QPixmap(d->q_ptr->size());
         pix.fill(d->q_ptr->palette().color(d->q_ptr->backgroundRole()));
 
@@ -663,7 +668,7 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
     if(stroke.size() - point > 1)
     {
         QBrush brush(stroke.pen()->color());
-        pen.setWidthF(1);
+        pen.setWidthF(0);
         p.setPen(pen);
         p.setBrush(brush);
         const QPointF points[] = {
@@ -679,6 +684,7 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
 
         for(int i = point; i < stroke.size() - 1; i++)
         {
+            qDebug() << stroke[i+1].normal();
             QLineF line(stroke[i], stroke[i+1]);
 
             QPointF fixedList[6];
@@ -693,11 +699,25 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
 //                normal = line.normalVector().unitVector().p2() - line.normalVector().p1();
 //                fixedList[4] = line
 //            }
-            fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*stroke[i].normal().toPointF();
+            QVector2D norm1 = stroke[i].normal();
+            if(qRadiansToDegrees(qAcos(QVector2D::dotProduct(norm1, stroke[i+1].normal()))) > 90)
+            {
+//                pen.setColor(QColor(255,0,0));
+//                p.setPen(pen);
+                norm1.setX(-norm1.x());
+                norm1.setY(-norm1.y());
+            }
+            fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*norm1.toPointF();
             fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
             fixedList[2] = line.p2() - stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
-            fixedList[3] = line.p1() - stroke.pen()->calcWidth(stroke[i].pressure())*stroke[i].normal().toPointF();
+            fixedList[3] = line.p1() - stroke.pen()->calcWidth(stroke[i].pressure())*norm1.toPointF();
 
+            QVector2D a(0, 1);
+            QVector2D b(1, -1);
+
+            b.normalize();
+
+            qDebug() << "DOT" << qRadiansToDegrees(qAcos(QVector2D::dotProduct(a, b))) << point;
             p.drawPolygon(fixedList, 4);
 //            list[i-point + (stroke.size() - point)] =
         }
@@ -713,6 +733,9 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
         p.drawLine(stroke[i], stroke[i+1]);
         */
     }
+
+    // Drawn
+    stroke.setDirty(false, -1);
 }
 
 
