@@ -673,7 +673,7 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
     if(stroke.size() - point > 1)
     {
         QBrush brush(stroke.pen()->color());
-        pen.setWidthF(0);
+        pen.setWidthF(1.5);
         p.setPen(pen);
         p.setBrush(brush);
         const QPointF points[] = {

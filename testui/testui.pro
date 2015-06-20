@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = DrawingPadTest
 TEMPLATE = app
-
+CONFIG  += debug_and_release_target debug_and_release
 
 SOURCES += main.cpp \
         testui.cpp
@@ -21,7 +21,11 @@ FORMS    += testui.ui
 
 INCLUDEPATH += ../qdrawingarea
 
-LIBS += -Wl,-rpath=$$OUT_PWD/../qdrawingarea -L../qdrawingarea -lqdrawingarea
+CONFIG(debug, debug|release) {
+  LIBS += -Wl,-rpath=$$OUT_PWD/../qdrawingarea/debug/ -L../qdrawingarea/debug -lqdrawingarea
+} else {
+  LIBS += -Wl,-rpath=$$OUT_PWD/../qdrawingarea/release/ -L../qdrawingarea/release -lqdrawingarea
+}
 
 DISTFILES += \
     drawingarea/NOTES.txt
