@@ -693,17 +693,6 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
             QLineF line(stroke[i], stroke[i+1]);
 
             QPointF fixedList[6];
-//            QPointF normal = line.normalVector().unitVector().p2() - line.normalVector().p1();
-//            fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*normal;
-//            fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*normal;
-//            fixedList[2] = line.p2() - stroke.pen()->calcWidth(stroke[i+1].pressure())*normal;
-//            fixedList[3] = line.p1() - stroke.pen()->calcWidth(stroke[i].pressure())*normal;
-//            if(i != 0)
-//            {
-//                line = QLineF(stroke[i-1], stroke[i]);
-//                normal = line.normalVector().unitVector().p2() - line.normalVector().p1();
-//                fixedList[4] = line
-//            }
             QVector2D norm1, norm2;
 
             if(stroke.pen()->isOrientationLocked())
@@ -719,15 +708,13 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
                 norm2 = stroke[i+1].normal();
                 if(qRadiansToDegrees(qAcos(QVector2D::dotProduct(norm1, stroke[i+1].normal()))) > 90)
                 {
-    //                pen.setColor(QColor(255,0,0));
-    //                p.setPen(pen);
                     norm1.setX(-norm1.x());
                     norm1.setY(-norm1.y());
                 }
             }
             fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*norm1.toPointF();
-            fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
-            fixedList[2] = line.p2() - stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
+            fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*norm2.toPointF();
+            fixedList[2] = line.p2() - stroke.pen()->calcWidth(stroke[i+1].pressure())*norm2.toPointF();
             fixedList[3] = line.p1() - stroke.pen()->calcWidth(stroke[i].pressure())*norm1.toPointF();
 
             QVector2D a(0, 1);
@@ -735,9 +722,7 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
 
             b.normalize();
 
-            qDebug() << "DOT" << qRadiansToDegrees(qAcos(QVector2D::dotProduct(a, b))) << point;
             p.drawPolygon(fixedList, 4);
-//            list[i-point + (stroke.size() - point)] =
         }
 
 //        p.drawPolygon(points, 5);
