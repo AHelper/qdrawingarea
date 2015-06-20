@@ -584,7 +584,12 @@ bool QDrawingPen::isVariableWidth()
 
 bool QDrawingPen::isOrientationLocked()
 {
-    return m_orientationLock == qQNaN();
+    return !qIsNaN(m_orientationLock);
+}
+
+qreal QDrawingPen::orientationLock()
+{
+    return m_orientationLock;
 }
 
 
@@ -699,13 +704,26 @@ void Rasterizer::renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point
 //                normal = line.normalVector().unitVector().p2() - line.normalVector().p1();
 //                fixedList[4] = line
 //            }
-            QVector2D norm1 = stroke[i].normal();
-            if(qRadiansToDegrees(qAcos(QVector2D::dotProduct(norm1, stroke[i+1].normal()))) > 90)
+            QVector2D norm1, norm2;
+
+            if(stroke.pen()->isOrientationLocked())
             {
-//                pen.setColor(QColor(255,0,0));
-//                p.setPen(pen);
-                norm1.setX(-norm1.x());
-                norm1.setY(-norm1.y());
+                QTransform trans;
+
+                trans.rotate(stroke.pen()->orientationLock());
+                norm1 = norm2 = QVector2D(trans.map(QPointF(0, -1)));
+            }
+            else
+            {
+                norm1 = stroke[i].normal();
+                norm2 = stroke[i+1].normal();
+                if(qRadiansToDegrees(qAcos(QVector2D::dotProduct(norm1, stroke[i+1].normal()))) > 90)
+                {
+    //                pen.setColor(QColor(255,0,0));
+    //                p.setPen(pen);
+                    norm1.setX(-norm1.x());
+                    norm1.setY(-norm1.y());
+                }
             }
             fixedList[0] = line.p1() + stroke.pen()->calcWidth(stroke[i].pressure())*norm1.toPointF();
             fixedList[1] = line.p2() + stroke.pen()->calcWidth(stroke[i+1].pressure())*stroke[i+1].normal().toPointF();
