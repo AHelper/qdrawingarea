@@ -56,16 +56,27 @@ class Rasterizer : public QObject
 public:
     explicit Rasterizer(struct QDrawingAreaPrivate *d);
 
+    void moveToThread(QThread *targetThread);
+
 signals:
     void updateRender(QPixmap img);
 public slots:
     void repaint(QList<int> modifiedStrokes);
+    /**
+     * @brief Full render at a later time.  Collapses multiple calls.
+     */
+    void repaintLater();
+
+private slots:
+    void repaintTimeout();
 
 private:
     inline void renderFullStroke(QPainter &p, QDrawingStroke &stroke);
     inline void renderPartialStroke(QPainter &p, QDrawingStroke &stroke);
     inline void renderStrokeFrom(QPainter &p, QDrawingStroke &stroke, int point);
+
     struct QDrawingAreaPrivate *d;
+    QTimer repaintTimer;
 };
 
 struct QAbstractDrawingModelPrivate

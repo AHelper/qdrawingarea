@@ -157,11 +157,10 @@ bool QDrawingArea::event(QEvent *e)
         QPainter p(this);
         p.drawPixmap(rect(), d->pixmap);
     }
-
         break;
     case QEvent::Resize:
         qDebug() << "QEvent::Resize";
-
+        emit d->rasterizer->repaintLater();
         break;
     default:
         qDebug() << e;
@@ -622,7 +621,13 @@ qreal QDrawingPen::orientationLock()
 Rasterizer::Rasterizer(QDrawingAreaPrivate *d) :
     d(d)
 {
+    connect(&repaintTimer, &QTimer::timeout, this, &Rasterizer::repaintTimeout);
+}
 
+void Rasterizer::moveToThread(QThread *targetThread)
+{
+    QObject::moveToThread(targetThread);
+    repaintTimer.moveToThread(targetThread);
 }
 
 void Rasterizer::repaint(QList<int> modifiedStrokes)
@@ -663,6 +668,18 @@ void Rasterizer::repaint(QList<int> modifiedStrokes)
 
 
     emit updateRender(pix);
+}
+
+void Rasterizer::repaintLater()
+{
+    if(!repaintTimer.isActive())
+        repaintTimer.start(0);
+}
+
+void Rasterizer::repaintTimeout()
+{
+    repaintTimer.stop();
+    repaint(QList<int>());
 }
 
 void Rasterizer::renderFullStroke(QPainter &p, QDrawingStroke &stroke)
