@@ -68,12 +68,26 @@ private:
     struct QDrawingAreaPrivate *d;
 };
 
+struct QAbstractDrawingModelPrivate
+{
+    QAbstractDrawingModelPrivate(QAbstractDrawingModel *q);
+    ~QAbstractDrawingModelPrivate();
+
+    void generateRandomId();
+
+    QAbstractDrawingModel *q_ptr;
+
+//    QMap<quint32, QDrawingStroke> strokeMap;
+    QSizeF documentSize;
+
+    quint32 currentId;
+    QMap<quint32, QDrawingStroke> strokeMap;
+};
+
 struct QDrawingAreaPrivate
 {
     QDrawingAreaPrivate(QDrawingArea *q);
     ~QDrawingAreaPrivate();
-
-    void generateRandomId();
 
     typedef QPair<QTouchDevice,QTouchEvent::TouchPoint> TouchInfoPair;
     QDrawingArea *q_ptr;
@@ -85,27 +99,13 @@ struct QDrawingAreaPrivate
     QThread *processorThread;
     Rasterizer *rasterizer;
     QThread *rasterizerThread;
-    QVector<QDrawingStroke> strokes;
-    QMap<quint32, QDrawingStroke> strokeMap;
-    quint32 currentId;
     QMap<qint64, quint32> tabletIdMap;
     QList<QSharedPointer<QDrawingPen> > pens;
     Qt::MouseButtons heldMouseButtons;
     QPixmap pixmap;
     QMap<TouchInfoPair, quint32> touchPointMap;
-};
-
-struct QAbstractDrawingModelPrivate
-{
-    QAbstractDrawingModelPrivate(QAbstractDrawingModel *q);
-    ~QAbstractDrawingModelPrivate();
-
-    QAbstractDrawingModel *q_ptr;
-
-    QMap<quint32, QDrawingStroke> strokeMap;
-    QSizeF documentSize;
-
-    quint32 currentId;
+    QAbstractDrawingModel *model;
+    QAbstractDrawingModelPrivate *model_d;
 };
 
 #endif // QDRAWINGAREA_P

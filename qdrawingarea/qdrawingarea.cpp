@@ -11,7 +11,13 @@
 QDrawingArea::QDrawingArea(QWidget *parent) : QWidget(parent),
     d_ptr(new QDrawingAreaPrivate(this))
 {
+    setModel(new QAbstractDrawingModel(this));
+}
 
+QDrawingArea::QDrawingArea(QAbstractDrawingModel *model, QWidget *parent) : QWidget(parent),
+    d_ptr(new QDrawingAreaPrivate(this))
+{
+    setModel(model);
 }
 
 QDrawingArea::~QDrawingArea()
@@ -188,6 +194,21 @@ void QDrawingArea::addPen(QDrawingPen &p)
     d->pens.append(QSharedPointer<QDrawingPen>(new QDrawingPen(p)));
 }
 
+QAbstractDrawingModel *QDrawingArea::model()
+{
+    Q_D(QDrawingArea);
+
+    return d->model;
+}
+
+void QDrawingArea::setModel(QAbstractDrawingModel *model)
+{
+    Q_D(QDrawingArea);
+
+    d->model = model;
+    d->model_d = model->d_ptr;
+}
+
 void QDrawingArea::updatePixmap(QPixmap p)
 {
     Q_D(QDrawingArea);
@@ -265,20 +286,25 @@ void InputProcessor::moveToThread(QThread *targetThread)
 
 void InputProcessor::processPoint(quint32 deviceId, QSharedPointer<QDrawingPen> pen, qreal x, qreal y, qreal pressure)
 {
+    QAbstractDrawingModelPrivate *md = d->model_d;
+    // TODO: Needs model validation
     QDrawingPoint point(x, y, pressure);
 
 //    if(stroke.id() == (quint32)-1)
     if(!deviceIdMap.contains(deviceId))
     {
-        d->generateRandomId();
-        deviceIdMap[deviceId] = d->currentId;
+        d->model_d->generateRandomId();
 
-        QDrawingStroke &stroke = d->strokeMap[deviceIdMap[deviceId]];
-        stroke.setId(d->currentId);
+//        QDrawingStroke &stroke = md->strokes[md->strokeMap[deviceIdMap[deviceId]]];
+        QDrawingStroke &stroke = md->strokeMap[md->currentId] = QDrawingStroke();
+
+        stroke.setId(d->model_d->currentId);
         stroke.setPen(pen);
+
+        deviceIdMap[deviceId] = md->currentId;
     }
 
-    QDrawingStroke &stroke = d->strokeMap[deviceIdMap[deviceId]];
+    QDrawingStroke &stroke = md->strokeMap[deviceIdMap[deviceId]];
 
     // TODO: Calculate motion of the point smoothly
     // FIXME: Dirty
@@ -516,7 +542,7 @@ QDrawingAreaPrivate::~QDrawingAreaPrivate() {
     processorThread->deleteLater();
 }
 
-void QDrawingAreaPrivate::generateRandomId()
+void QAbstractDrawingModelPrivate::generateRandomId()
 {
     if(strokeMap.contains(currentId))
         currentId++;
@@ -613,7 +639,7 @@ void Rasterizer::repaint(QList<int> modifiedStrokes)
 
         for(int i = 0; i < modifiedStrokes.size(); i++)
         {
-            renderPartialStroke(p, d->strokeMap[modifiedStrokes[i]]);
+            renderPartialStroke(p, d->model_d->strokeMap[modifiedStrokes[i]]);
         }
 
         p.end();
@@ -625,9 +651,9 @@ void Rasterizer::repaint(QList<int> modifiedStrokes)
         pix.fill(d->q_ptr->palette().color(d->q_ptr->backgroundRole()));
 
         QPainter p(&pix);
-        QMap<quint32, QDrawingStroke>::iterator itr = d->strokeMap.begin();
+        QMap<quint32, QDrawingStroke>::iterator itr = d->model_d->strokeMap.begin();
 
-        for(; itr != d->strokeMap.end(); ++itr)
+        for(; itr != d->model_d->strokeMap.end(); ++itr)
         {
             renderFullStroke(p, itr.value());
         }
@@ -753,7 +779,8 @@ QAbstractDrawingModelPrivate::~QAbstractDrawingModelPrivate()
 }
 
 
-QAbstractDrawingModel::QAbstractDrawingModel()
+QAbstractDrawingModel::QAbstractDrawingModel(QObject *parent) : QObject(parent),
+    d_ptr(new QAbstractDrawingModelPrivate(this))
 {
 
 }

@@ -109,8 +109,9 @@ protected:
 class QAbstractDrawingModel : public QObject
 {
     Q_OBJECT
+    friend class QDrawingArea;
 public:
-    QAbstractDrawingModel();
+    QAbstractDrawingModel(QObject *parent = 0);
     ~QAbstractDrawingModel();
 
     /**
@@ -130,6 +131,24 @@ public:
 signals:
     void strokeInserted(const QDrawingStroke& stroke);
     void strokeRemoved(const QDrawingStroke& stroke);
+    /**
+     * @brief Stroke has had modifications that would warrent the entire stroke being redrawn/reprocessed.
+     * @param stroke
+     */
+    void strokeChanged(const QDrawingStroke& stroke);
+    /**
+     * @brief Stroke had points modified or added starting at `at` position.
+     * @param stroke
+     * @param at Start of point additions/modifications inclusive.
+     */
+    void strokeChanged(const QDrawingStroke& stroke, int at);
+    /**
+     * @brief Stroke is reported to be finished.  This is a hint, but the stroke can always be modified outside of this model.
+     * @param stroke
+     */
+    void strokeFinished(const QDrawingStroke& stroke);
+    void strokeSelected(const QDrawingStroke& stroke);
+    void strokeDeselected(const QDrawingStroke& stroke);
 
 private:
     QAbstractDrawingModelPrivate *d_ptr;
@@ -140,8 +159,10 @@ private:
 class QDrawingArea : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(QAbstractDrawingModel* model READ model WRITE setModel)
 public:
     explicit QDrawingArea(QWidget *parent = 0);
+    explicit QDrawingArea(QAbstractDrawingModel *model, QWidget *parent = 0);
     ~QDrawingArea();
 
     bool event(QEvent *e);
@@ -159,10 +180,12 @@ public:
     void setFlag(int flag, bool enable = true);
     void setUpdateRate(int updatesPerSecond);
     void addPen(QDrawingPen &p);
+    QAbstractDrawingModel *model();
 
 signals:
 
 public slots:
+    void setModel(QAbstractDrawingModel *model);
 
 private slots:
     void updatePixmap(QPixmap p);
